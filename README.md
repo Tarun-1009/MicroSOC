@@ -2,21 +2,21 @@
 
 # 🛡️ MicroSOC
 
-[cite_start]**MicroSOC Command Center** is a cyber-defense dashboard designed to simulate attack logs, detect threats in real-time, and visualize security incidents[cite: 5, 7].
+**MicroSOC Command Center** is a cyber-defense dashboard designed to simulate attack logs, detect threats in real-time, and visualize security incidents[cite: 5, 7].
 
 ### 💻 Tech Stack
 
-  * [cite_start]**Frontend:** React.js,
-  * [cite_start]**Backend:** Node.js, Express
-  * [cite_start]**Database:** PostgreSQL
+  * **Frontend:** React.js,
+  * **Backend:** Node.js, Express
+  * **Database:** PostgreSQL
 
 ### 👥 Team : ThreeStack
-
-|        Name      |   Role    |              GitHub                 |
-| **Tarun Kumar**  | Team Lead | [cite_start]@Tarun-1009 [cite: 4]   |
-| **Tarun Kaul**   |  Backend  | [cite_start]@Tarunkaul [cite: 4]    |
-| **Shri Krishan** |  Frontend | [cite_start]@Shre-krishan [cite: 4] |
-
+```bash
+|        Name      |   Role    |    GitHub     |
+| **Tarun Kumar**  | Team Lead | @Tarun-1009   |
+| **Tarun Kaul**   |  Backend  | @Tarunkaul    |
+| **Shri Krishan** |  Frontend | @Shre-krishan |
+```
 -----
 
 ### Quick Start
