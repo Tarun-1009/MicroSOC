@@ -4,13 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "start": "node index.js",
+  "dev": "nodemon index.js",
+  "gitlog": "git log --graph --abbrev-commit --decorate --date=relative --all --pretty=format:'%C(bold blue)%h%Creset - %C(bold green)%an%Creset: %s %C(dim)(%cr)%Creset %C(bold yellow)%d%Creset'"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1"
+  },
+   "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }
