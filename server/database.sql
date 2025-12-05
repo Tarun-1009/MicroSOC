@@ -8,6 +8,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+<<<<<<< HEAD
 CREATE TABLE attack_logs (
     log_id SERIAL PRIMARY KEY,
     source_ip VARCHAR(50),
@@ -16,3 +17,5 @@ CREATE TABLE attack_logs (
     status VARCHAR(20) DEFAULT 'Open', 
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+=======
+>>>>>>> 6ac48dd (Created user table for Login/signup module)
