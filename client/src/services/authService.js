@@ -7,6 +7,9 @@ class AuthService {
     // Sign Up
     async signup(name, email, password, role = 'analyst') {
         try {
+            console.log('Attempting signup with:', { name, email, role });
+            console.log('API URL:', `${API_URL}/auth/signup`);
+
             const response = await fetch(`${API_URL}/auth/signup`, {
                 method: 'POST',
                 headers: {
@@ -15,7 +18,11 @@ class AuthService {
                 body: JSON.stringify({ name, email, password, role }),
             });
 
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
             const data = await response.json();
+            console.log('Response data:', data);
 
             if (data.success) {
                 // Store token in localStorage
@@ -25,10 +32,14 @@ class AuthService {
 
             return data;
         } catch (error) {
-            console.error('Signup error:', error);
+            console.error('Signup error details:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+            });
             return {
                 success: false,
-                message: 'Network error. Please try again.',
+                message: `Network error: ${error.message}. Please check if the server is running on http://localhost:5000`,
             };
         }
     }
