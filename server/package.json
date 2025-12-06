@@ -2,9 +2,9 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "sever.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node sever.js",
+    "start": "node server.js",
     "dev": "nodemon server.js",
     "gitlog": "git log --graph --abbrev-commit --decorate --date=relative --all --pretty=format:'%C(bold blue)%h%Creset - %C(bold green)%an%Creset: %s %C(dim)(%cr)%Creset %C(bold yellow)%d%Creset'"
   },
