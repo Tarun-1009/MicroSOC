@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
+import Ingest from './components/Ingest';
 import authService from './services/authService';
 
 // Protected Route Component
@@ -27,6 +28,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Ingest Route */}
+        <Route
+          path="/ingest"
+          element={
+            <ProtectedRoute>
+              <Ingest />
             </ProtectedRoute>
           }
         />

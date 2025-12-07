@@ -5,18 +5,17 @@ import './Dashboard.css';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const [logs, setLogs] = useState([]);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('Overview');
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    // Mock data for charts and events
+    // Mock data for charts
     const [attackTrends] = useState([
         { time: '03:00', value1: 100, value2: 50 },
         { time: '06:00', value1: 80, value2: 70 },
         { time: '09:00', value1: 60, value2: 90 },
         { time: '12:00', value1: 120, value2: 110 },
-        
         { time: '15:00', value1: 90, value2: 130 },
         { time: '18:00', value1: 110, value2: 100 },
         { time: '21:00', value1: 200, value2: 150 },
@@ -25,22 +24,37 @@ const Dashboard = () => {
         { time: '06:00', value1: 150, value2: 140 },
     ]);
 
-    const [severityData] = useState({
-        critical: 25,
-        high: 30,
-        medium: 35,
-        low: 10
-    });
+    // Calculate severity distribution from real logs
+    const getSeverityData = () => {
+        const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+        logs.forEach(log => {
+            if (counts.hasOwnProperty(log.severity)) {
+                counts[log.severity]++;
+            }
+        });
+        const total = logs.length || 1;
+        return {
+            critical: Math.round((counts.Critical / total) * 100),
+            high: Math.round((counts.High / total) * 100),
+            medium: Math.round((counts.Medium / total) * 100),
+            low: Math.round((counts.Low / total) * 100)
+        };
+    };
 
-    const [securityEvents] = useState([
-        { timestamp: '2025-12-06 11:23:45', sourceIp: '203.0.113.42', eventType: 'DDoS Attack Detected', targetSystem: 'Web Server 01', severity: 'Critical' },
-        { timestamp: '2025-12-06 11:18:32', sourceIp: '198.51.100.87', eventType: 'Malware Signature Match', targetSystem: 'Endpoint PC-2847', severity: 'High' },
-        { timestamp: '2025-12-06 11:15:20', sourceIp: '192.0.2.156', eventType: 'Brute Force Login Attempt', targetSystem: 'SSH Server', severity: 'High' },
-        { timestamp: '2025-12-06 11:12:08', sourceIp: '10.0.0.45', eventType: 'Suspicious Outbound Traffic', targetSystem: 'Database Server', severity: 'Critical' },
-        { timestamp: '2025-12-06 11:08:54', sourceIp: '172.16.0.23', eventType: 'Unauthorized Access Attempt', targetSystem: 'Admin Panel', severity: 'Medium' },
-        { timestamp: '2025-12-06 11:05:41', sourceIp: '192.168.1.100', eventType: 'Port Scan Detected', targetSystem: 'Firewall', severity: 'Medium' },
-        { timestamp: '2025-12-06 11:02:15', sourceIp: '10.10.10.5', eventType: 'Failed Authentication', targetSystem: 'VPN Gateway', severity: 'Low' },
-    ]);
+    const severityData = getSeverityData();
+
+    // Fetch logs from database
+    const fetchLogs = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/logs');
+            const data = await res.json();
+            // Filter out resolved logs - only show Open and In Progress
+            const activeLogs = data.filter(log => log.status !== 'Resolved');
+            setLogs(activeLogs);
+        } catch (err) {
+            console.error("Failed to fetch logs:", err);
+        }
+    };
 
     useEffect(() => {
         // Check if user is authenticated
@@ -52,6 +66,14 @@ const Dashboard = () => {
         const currentUser = authService.getCurrentUser();
         setUser(currentUser);
         setLoading(false);
+
+        // Initial fetch
+        fetchLogs();
+
+        // Auto-refresh every 3 seconds
+        const interval = setInterval(fetchLogs, 3000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const handleLogout = () => {
@@ -61,6 +83,20 @@ const Dashboard = () => {
 
     const getSeverityClass = (severity) => {
         return `severity-badge severity-${severity.toLowerCase()}`;
+    };
+
+    // Format timestamp
+    const formatTimestamp = (timestamp) => {
+        const date = new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
     };
 
     if (loading) {
@@ -84,19 +120,15 @@ const Dashboard = () => {
                     <span className="brand-name">MicroSOC</span>
                 </div>
 
-                <nav className="dashboard-nav">
-                    {['Overview', 'Alerts', 'Threats', 'Incidents', 'Analytics', 'Reports'].map(tab => (
-                        <button
-                            key={tab}
-                            className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
-                            onClick={() => setActiveTab(tab)}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </nav>
 
                 <div className="header-actions">
+                    <button
+                        className="nav-link-btn"
+                        onClick={() => navigate('/ingest')}
+                    >
+                        📊 View All Logs
+                    </button>
+
                     <div className="user-menu-container">
                         <button
                             className="user-profile-btn"
@@ -226,32 +258,46 @@ const Dashboard = () => {
 
                 {/* Live Security Event Feed */}
                 <div className="dashboard-card events-card">
-                    <h3 className="card-title">Live Security Event Feed</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <h3 className="card-title" style={{ margin: 0 }}>Recent Incidents (Top 5)</h3>
+                        <span className="live-badge">
+                            <span className="live-dot"></span>
+                            LIVE
+                        </span>
+                    </div>
                     <div className="events-table-container">
                         <table className="events-table">
                             <thead>
                                 <tr>
+                                    <th>Log ID</th>
                                     <th>Timestamp</th>
                                     <th>Source IP</th>
-                                    <th>Event Type</th>
-                                    <th>Target System</th>
+                                    <th>Attack Type</th>
                                     <th>Severity</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {securityEvents.map((event, index) => (
-                                    <tr key={index}>
-                                        <td>{event.timestamp}</td>
-                                        <td>{event.sourceIp}</td>
-                                        <td>{event.eventType}</td>
-                                        <td>{event.targetSystem}</td>
-                                        <td>
-                                            <span className={getSeverityClass(event.severity)}>
-                                                {event.severity}
-                                            </span>
+                                {logs.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                                            No logs yet. Start the Kaiju script to generate attack logs.
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    logs.slice(0, 5).map((log) => (
+                                        <tr key={log.log_id}>
+                                            <td>#{log.log_id}</td>
+                                            <td>{formatTimestamp(log.timestamp)}</td>
+                                            <td>{log.source_ip}</td>
+                                            <td>{log.attack_type}</td>
+                                            <td>
+                                                <span className={getSeverityClass(log.severity)}>
+                                                    {log.severity}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

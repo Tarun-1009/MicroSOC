@@ -84,6 +84,23 @@
     gap: 12px;
 }
 
+.nav-link-btn {
+    padding: 8px 16px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-link-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
 .user-profile-btn {
     width: 36px;
     height: 36px;
@@ -375,6 +392,43 @@
     color: #4b5563;
 }
 
+/* Live Badge */
+.live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #dc2626;
+    letter-spacing: 0.5px;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #dc2626;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .dashboard-grid {
@@ -391,6 +445,53 @@
         gap: 20px;
     }
 }
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-open {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-resolved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Status Select Dropdown */
+.status-select {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1f2937;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.status-select:hover {
+    border-color: #3b82f6;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 
 @media (max-width: 768px) {
     .dashboard-header {
