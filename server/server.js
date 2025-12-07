@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 });
 
 // JWT Secret (in production, use a strong secret in .env)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || '123456789abcdef';
 
 // ROUTES 
 
@@ -245,6 +245,33 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
             message: 'Server error',
             error: error.message
         });
+    }
+});
+
+//INGESTION ROUTE 
+app.post('/api/ingest', async (req, res) => {
+    try {
+        const { source_ip, attack_type, severity } = req.body;
+    
+        const newLog = await pool.query(
+            "INSERT INTO attack_logs (source_ip, attack_type, severity) VALUES ($1, $2, $3) RETURNING *",
+            [source_ip, attack_type, severity]
+        );
+        res.json(newLog.rows[0]);
+    } catch (err) {
+        console.error("Ingest Error:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// DASHBOARD ROUTE 
+app.get('/api/logs', async (req, res) => {
+    try {
+        const logs = await pool.query("SELECT * FROM attack_logs ORDER BY log_id DESC LIMIT 20");
+        res.json(logs.rows);
+    } catch (err) {
+        console.error("Fetch Error:", err.message);
+        res.status(500).send("Server Error");
     }
 });
 

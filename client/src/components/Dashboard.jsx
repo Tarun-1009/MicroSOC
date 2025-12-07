@@ -16,6 +16,7 @@ const Dashboard = () => {
         { time: '06:00', value1: 80, value2: 70 },
         { time: '09:00', value1: 60, value2: 90 },
         { time: '12:00', value1: 120, value2: 110 },
+        
         { time: '15:00', value1: 90, value2: 130 },
         { time: '18:00', value1: 110, value2: 100 },
         { time: '21:00', value1: 200, value2: 150 },
