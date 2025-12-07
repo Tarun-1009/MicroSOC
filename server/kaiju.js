@@ -1,11 +1,11 @@
-// server/kaiju.js
+
 const axios = require('axios');
 
 const ATTACKS = ['SQL Injection', 'XSS Payload', 'DDoS Volumetric', 'Port Scan', 'Brute Force'];
 const SEVERITY = ['Low', 'Medium', 'High', 'Critical'];
 
 function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function getIP() { return `192.168.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`; }
+function getIP() { return `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`; }
 
 async function attack() {
     try {
@@ -14,15 +14,14 @@ async function attack() {
             attack_type: getRandom(ATTACKS),
             severity: getRandom(SEVERITY)
         };
-        
+
         // Hit your own local server
         await axios.post('http://localhost:5000/api/ingest', payload);
-        console.log(`🔥 FIRED: ${payload.attack_type} [${payload.severity}]`);
+        // Removed console.log to keep terminal clean
     } catch (e) {
-        console.log("❌ Target Offline (Server not running)");
+        // Silent fail - server might not be running
     }
 }
 
-// Fire an attack every 2 seconds
-console.log("🦖 CYBER KAIJU ONLINE. Targeting Mainframe...");
-setInterval(attack, 2000);
+// Fire an attack every 3 seconds
+setInterval(attack, 3000);

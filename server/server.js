@@ -19,14 +19,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Request logging middleware
-app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-    if (req.path.includes('/auth/')) {
-        console.log('Request body:', req.body);
-    }
-    next();
-});
+// Request logging removed for clean terminal
+
 
 // JWT Secret (in production, use a strong secret in .env)
 const JWT_SECRET = process.env.JWT_SECRET || '123456789abcdef';
@@ -252,7 +246,7 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
 app.post('/api/ingest', async (req, res) => {
     try {
         const { source_ip, attack_type, severity } = req.body;
-    
+
         const newLog = await pool.query(
             "INSERT INTO attack_logs (source_ip, attack_type, severity) VALUES ($1, $2, $3) RETURNING *",
             [source_ip, attack_type, severity]
@@ -267,11 +261,53 @@ app.post('/api/ingest', async (req, res) => {
 // DASHBOARD ROUTE 
 app.get('/api/logs', async (req, res) => {
     try {
-        const logs = await pool.query("SELECT * FROM attack_logs ORDER BY log_id DESC LIMIT 20");
+        const logs = await pool.query("SELECT * FROM attack_logs ORDER BY log_id DESC");
         res.json(logs.rows);
     } catch (err) {
         console.error("Fetch Error:", err.message);
         res.status(500).send("Server Error");
+    }
+});
+
+// UPDATE LOG STATUS ROUTE
+app.put('/api/logs/:id/status', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        // Validate status
+        const validStatuses = ['Open', 'In Progress', 'Resolved'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status. Must be: Open, In Progress, or Resolved'
+            });
+        }
+
+        const result = await pool.query(
+            "UPDATE attack_logs SET status = $1 WHERE log_id = $2 RETURNING *",
+            [status, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Log not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Log status updated successfully',
+            data: result.rows[0]
+        });
+    } catch (err) {
+        console.error("Update Error:", err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: err.message
+        });
     }
 });
 
