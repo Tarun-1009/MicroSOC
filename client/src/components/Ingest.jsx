@@ -64,6 +64,34 @@ const Ingest = () => {
         });
     };
 
+    // BAN IP Logic
+    const handleBan = async (ip) => {
+        if (!window.confirm(`Are you sure you want to BAN IP: ${ip}? This will block all future logs from this source.`)) return;
+
+        try {
+            const res = await fetch('http://localhost:5000/api/admin/ban', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authService.getToken()}`
+                },
+                body: JSON.stringify({ ip_address: ip })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(`✅ ${data.message}`);
+            } else {
+                alert(`❌ Failed to ban: ${data.message}`);
+            }
+        } catch (err) {
+            console.error("Ban request failed:", err);
+            alert("❌ Network error while banning IP");
+        }
+    };
+
+
     const updateLogStatus = async (logId, newStatus) => {
         try {
             const token = authService.getToken();
@@ -178,6 +206,7 @@ const Ingest = () => {
                                     <th>Severity</th>
                                     <th>Status</th>
                                     <th>Action</th>
+                                    {user?.role === 'admin' && <th>Countermeasures</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -217,6 +246,26 @@ const Ingest = () => {
                                                         <option value="Resolved">Resolved</option>
                                                     </select>
                                                 </td>
+                                                {user?.role === 'admin' && (
+                                                    <td>
+                                                        <button
+                                                            onClick={() => handleBan(log.source_ip)}
+                                                            className="ban-btn"
+                                                            style={{
+                                                                background: '#fee2e2',
+                                                                color: '#dc2626',
+                                                                border: '1px solid #dc2626',
+                                                                padding: '4px 8px',
+                                                                borderRadius: '4px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '12px',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                        >
+                                                            BAN IP
+                                                        </button>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ))
                                 )}

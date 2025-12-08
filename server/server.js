@@ -21,6 +21,24 @@ app.use(express.json());
 
 // Request logging removed for clean terminal
 
+// Initialize Database Tables
+const initDB = async () => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS banned_ips (
+                ip_address VARCHAR(45) PRIMARY KEY,
+                banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                banned_by VARCHAR(255)
+            )
+        `);
+        console.log('[DB] Banned IPs table ready');
+    } catch (err) {
+        console.error('[DB] Table initialization error:', err);
+    }
+};
+initDB();
+
+
 
 // JWT Secret (in production, use a strong secret in .env)
 const JWT_SECRET = process.env.JWT_SECRET || '123456789abcdef';
@@ -247,6 +265,15 @@ app.post('/api/ingest', async (req, res) => {
     try {
         const { source_ip, attack_type, severity } = req.body;
 
+        // Check if IP is banned
+        const bannedCheck = await pool.query("SELECT * FROM banned_ips WHERE ip_address = $1", [source_ip]);
+        if (bannedCheck.rows.length > 0) {
+            console.log(`[BLOCKED] Attack from banned IP: ${source_ip}`);
+            // Return 200 to confuse the attacker, or 403 to notify them. 
+            // Returning 403 Forbidden is standard.
+            return res.status(403).json({ message: "Connection refused by security policy" });
+        }
+
         const newLog = await pool.query(
             "INSERT INTO attack_logs (source_ip, attack_type, severity) VALUES ($1, $2, $3) RETURNING *",
             [source_ip, attack_type, severity]
@@ -335,6 +362,46 @@ app.delete('/api/admin/purge', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error during purge',
+            error: err.message
+        });
+    }
+});
+
+// ADMIN: BAN IP
+app.post('/api/admin/ban', authenticateToken, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access Denied: Admin privileges required'
+            });
+        }
+
+        const { ip_address } = req.body;
+
+        if (!ip_address) {
+            return res.status(400).json({
+                success: false,
+                message: 'IP address is required'
+            });
+        }
+
+        await pool.query(
+            "INSERT INTO banned_ips (ip_address, banned_by) VALUES ($1, $2) ON CONFLICT (ip_address) DO NOTHING",
+            [ip_address, req.user.userId]
+        );
+
+        res.json({
+            success: true,
+            message: `IP ${ip_address} has been banned successfully.`
+        });
+
+    } catch (err) {
+        console.error("Ban Error:", err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during ban',
             error: err.message
         });
     }
