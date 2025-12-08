@@ -131,15 +131,7 @@ const Auth = () => {
                             minLength="6"
                             disabled={loading}
                         />
-                        <select
-                            className="role-dropdown"
-                            value={signupData.role}
-                            onChange={(e) => setSignupData({ ...signupData, role: e.target.value })}
-                            disabled={loading}
-                        >
-                            <option value="analyst">Security Analyst</option>
-                            <option value="admin">Grid Admin</option>
-                        </select>
+                       
                         <button className="action-btn" type="submit" disabled={loading}>
                             {loading ? 'Creating Account...' : 'Sign Up'}
                         </button>

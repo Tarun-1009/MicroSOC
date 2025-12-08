@@ -27,27 +27,7 @@ a {
     font-size: 14px;
     text-decoration: none;
     margin: 15px 0;
-}
-/* --- Dropdown Styling --- */
-.role-dropdown {
-    background-color: #eee; /* Matches your input fields */
-    border: none;
-    padding: 12px 15px;
-    margin: 4px 2px;
-    width: 110%;
-    font-family: 'Montserrat', sans-serif; /* Matches your font */
-    color: #333;
-    font-size: 13px;
-    cursor: pointer;
-    outline: none;
-    
-    /* Custom Arrow Styling (Optional polish) */
 
-}
-
-/* Hover effect to show interactivity */
-.role-dropdown:hover {
-    background-color: #e3e3e3;
 }
 /* Main action buttons (Sign In / Sign Up on forms) */
 .action-btn {
