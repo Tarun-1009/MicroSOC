@@ -5,7 +5,6 @@ import Ingest from './components/Ingest';
 import authService from './services/authService';
 import { ThemeProvider } from './context/ThemeContext';
 
-// Protected Route Component
 function ProtectedRoute({ children }) {
   const isAuthenticated = authService.isAuthenticated();
 
@@ -21,10 +20,8 @@ function App() {
     <ThemeProvider>
       <Router>
         <Routes>
-          {/* Login/Signup Page */}
           <Route path="/" element={<Auth />} />
 
-          {/* Protected Dashboard Route */}
           <Route
             path="/dashboard"
             element={
@@ -34,7 +31,6 @@ function App() {
             }
           />
 
-          {/* Protected Ingest Route */}
           <Route
             path="/ingest"
             element={
@@ -44,7 +40,6 @@ function App() {
             }
           />
 
-          {/* Catch all - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

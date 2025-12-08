@@ -9,8 +9,6 @@ const pool = require('./db');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-// Configure CORS to allow requests from the Vite dev server
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
     credentials: true,
@@ -19,15 +17,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Request logging removed for clean terminal
-
-// Initialize Database Tables
 const initDB = async () => {
     try {
-        // SCORCHED EARTH: DROP TABLE TO ENSURE SCHEMA IS CORRECT
-        // In production, we would use migrations, but for this dev issue, we need to guarantee the schema.
         await pool.query(`DROP TABLE IF EXISTS banned_ips`);
-
         await pool.query(`
             CREATE TABLE banned_ips (
                 ip_address VARCHAR(45) PRIMARY KEY,
@@ -42,24 +34,16 @@ const initDB = async () => {
 };
 initDB();
 
-
-
-// JWT Secret (in production, use a strong secret in .env)
 const JWT_SECRET = process.env.JWT_SECRET || '123456789abcdef';
 
-// ROUTES 
-
-// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
 });
 
-//SIGN UP 
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
-        // Validation
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -67,7 +51,6 @@ app.post('/api/auth/signup', async (req, res) => {
             });
         }
 
-        // Check if user already exists
         const userExists = await pool.query(
             'SELECT * FROM users WHERE email = $1',
             [email]
@@ -80,11 +63,9 @@ app.post('/api/auth/signup', async (req, res) => {
             });
         }
 
-        // Hash password
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        // Insert new user
         const newUser = await pool.query(
             'INSERT INTO users (full_name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING user_id, full_name, email, role, created_at',
             [name, email, hashedPassword, role || 'analyst']
@@ -92,7 +73,6 @@ app.post('/api/auth/signup', async (req, res) => {
 
         const user = newUser.rows[0];
 
-        // Generate JWT token
         const token = jwt.sign(
             {
                 userId: user.user_id,
@@ -128,12 +108,10 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 });
 
-//SIGN IN
 app.post('/api/auth/signin', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Validation
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -141,7 +119,6 @@ app.post('/api/auth/signin', async (req, res) => {
             });
         }
 
-        // Check if user exists
         const result = await pool.query(
             'SELECT * FROM users WHERE email = $1',
             [email]
@@ -156,7 +133,6 @@ app.post('/api/auth/signin', async (req, res) => {
 
         const user = result.rows[0];
 
-        // Verify password
         const isValidPassword = await bcrypt.compare(password, user.password);
 
         if (!isValidPassword) {
@@ -166,7 +142,6 @@ app.post('/api/auth/signin', async (req, res) => {
             });
         }
 
-        // Generate JWT token
         const token = jwt.sign(
             {
                 userId: user.user_id,
@@ -202,10 +177,9 @@ app.post('/api/auth/signin', async (req, res) => {
     }
 });
 
-//MIDDLEWARE: Verify JWT Token
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
         return res.status(401).json({
@@ -226,7 +200,6 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-//PROTECTED ROUTE EXAMPLE
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
@@ -264,17 +237,13 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
     }
 });
 
-//INGESTION ROUTE 
 app.post('/api/ingest', async (req, res) => {
     try {
         const { source_ip, attack_type, severity } = req.body;
 
-        // Check if IP is banned
         const bannedCheck = await pool.query("SELECT * FROM banned_ips WHERE ip_address = $1", [source_ip]);
         if (bannedCheck.rows.length > 0) {
             console.log(`[BLOCKED] Attack from banned IP: ${source_ip}`);
-            // Return 200 to confuse the attacker, or 403 to notify them. 
-            // Returning 403 Forbidden is standard.
             return res.status(403).json({ message: "Connection refused by security policy" });
         }
 
@@ -289,7 +258,6 @@ app.post('/api/ingest', async (req, res) => {
     }
 });
 
-// DASHBOARD ROUTE 
 app.get('/api/logs', async (req, res) => {
     try {
         const logs = await pool.query("SELECT * FROM attack_logs ORDER BY log_id DESC");
@@ -300,13 +268,11 @@ app.get('/api/logs', async (req, res) => {
     }
 });
 
-// UPDATE LOG STATUS ROUTE
 app.put('/api/logs/:id/status', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
 
-        // Validate status
         const validStatuses = ['Open', 'In Progress', 'Resolved'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({
@@ -342,7 +308,6 @@ app.put('/api/logs/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
-// ADMIN: PURGE ALL LOGS
 app.delete('/api/admin/purge', authenticateToken, async (req, res) => {
     try {
         // Check if user is admin
@@ -353,7 +318,6 @@ app.delete('/api/admin/purge', authenticateToken, async (req, res) => {
             });
         }
 
-        // Delete all logs
         await pool.query("TRUNCATE TABLE attack_logs RESTART IDENTITY");
 
         res.json({
@@ -371,10 +335,8 @@ app.delete('/api/admin/purge', authenticateToken, async (req, res) => {
     }
 });
 
-// ADMIN: BAN IP
 app.post('/api/admin/ban', authenticateToken, async (req, res) => {
     try {
-        // Check if user is admin
         if (req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
@@ -412,9 +374,7 @@ app.post('/api/admin/ban', authenticateToken, async (req, res) => {
     }
 });
 
-// START SERVER 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`API endpoint: http://localhost:${PORT}`);
-
 });
