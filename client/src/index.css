@@ -8,21 +8,21 @@
   --bg-secondary: #f5f5f5;
   --bg-tertiary: #f9fafb;
   --bg-hover: #f3f4f6;
-  
+
   /* Text Colors */
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
   --text-tertiary: #9ca3af;
-  
+
   /* Border Colors */
   --border-primary: #e5e7eb;
   --border-secondary: #f3f4f6;
-  
+
   /* Accent Colors */
   --accent-blue: #3b82f6;
   --accent-blue-hover: #2563eb;
   --accent-blue-light: #dbeafe;
-  
+
   /* Status Colors */
   --status-critical-bg: #fee2e2;
   --status-critical-text: #991b1b;
@@ -32,16 +32,16 @@
   --status-medium-text: #92400e;
   --status-low-bg: #f3f4f6;
   --status-low-text: #4b5563;
-  
+
   /* Chart Colors */
   --chart-grid: #e5e7eb;
   --chart-high: #f97316;
   --chart-low: #60a5fa;
-  
+
   /* Shadow */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  
+
   /* Tooltip */
   --tooltip-bg: rgba(255, 255, 255, 0.95);
   --tooltip-border: #e5e7eb;
@@ -53,21 +53,21 @@
   --bg-secondary: #0f0f0f;
   --bg-tertiary: #262626;
   --bg-hover: #333333;
-  
+
   /* Text Colors */
   --text-primary: #f3f4f6;
   --text-secondary: #d1d5db;
   --text-tertiary: #9ca3af;
-  
+
   /* Border Colors */
   --border-primary: #404040;
   --border-secondary: #333333;
-  
+
   /* Accent Colors */
   --accent-blue: #60a5fa;
   --accent-blue-hover: #3b82f6;
   --accent-blue-light: #1e3a8a;
-  
+
   /* Status Colors */
   --status-critical-bg: #7f1d1d;
   --status-critical-text: #fecaca;
@@ -77,16 +77,16 @@
   --status-medium-text: #fef3c7;
   --status-low-bg: #404040;
   --status-low-text: #d1d5db;
-  
+
   /* Chart Colors */
   --chart-grid: #404040;
   --chart-high: #fb923c;
   --chart-low: #60a5fa;
-  
+
   /* Shadow */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
-  
+
   /* Tooltip */
   --tooltip-bg: rgba(38, 38, 38, 0.98);
   --tooltip-border: #404040;
@@ -137,67 +137,109 @@ body {
    THEME TOGGLE BUTTON
    =========================== */
 
+/* ===========================
+   THEME TOGGLE BUTTON
+   =========================== */
+
+/* ===========================
+   THEME TOGGLE BUTTON
+   =========================== */
+
 .theme-toggle {
   position: relative;
-  width: 60px;
-  height: 32px;
+  width: 44px;
+  /* Equal width and height for circle */
+  height: 44px;
   background: var(--bg-hover);
-  border: 2px solid var(--border-primary);
-  border-radius: 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: 50%;
+  /* Perfect circle */
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 2px;
-  transition: all 0.3s ease;
+  justify-content: center;
+  /* Center the inner element */
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  /* Interaction Protections */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  /* Premium Depth */
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.05),
+    0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* Dark mode enhancements */
+[data-theme="dark"] .theme-toggle {
+  background: #2a2a2a;
+  border-color: #404040;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* PRESS STATE */
+.theme-toggle:active {
+  transform: scale(0.92);
 }
 
 .theme-toggle:hover {
   border-color: var(--accent-blue);
-  transform: scale(1.05);
+  background: var(--bg-tertiary);
 }
 
+[data-theme="dark"] .theme-toggle:hover {
+  background: #333;
+}
+
+/* The inner circle/icon container */
+/* The inner circle/icon container */
 .theme-toggle-slider {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background: var(--accent-blue);
+  position: relative;
+  /* No longer absolute moving track */
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: transparent;
+  /* Remove background, icon floats or we use container bg */
+
+  /* Rotation Animation - Slower smoother spin */
+  transition: transform 0.7s ease-out;
 }
 
+/* Icon Styling */
 .theme-toggle-slider svg {
-  width: 14px;
-  height: 14px;
-  color: white;
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
 }
 
-/* Light mode - slider on left */
+[data-theme="dark"] .theme-toggle-slider svg {
+  color: var(--accent-blue);
+  /* Highlight icon in dark mode */
+}
+
+/* ANIMATION STATES */
+
+/* Light mode - 0 rotation */
 [data-theme="light"] .theme-toggle-slider {
-  transform: translateX(2px);
+  transform: rotate(0deg);
 }
 
-/* Dark mode - slider on right */
+/* Dark mode - Rotate 360 (One full spin) */
 [data-theme="dark"] .theme-toggle-slider {
-  transform: translateX(30px);
+  transform: rotate(360deg);
 }
 
-/* Animation for icon rotation */
-.theme-toggle-slider svg {
-  animation: iconRotate 0.3s ease;
-}
-
-@keyframes iconRotate {
-  0% {
-    transform: rotate(0deg) scale(0.8);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.1);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
-}
+/* Ensure svg stays upright if we want, OR let it rotate with container.
+   User asked for "rotate between dark and night", so spinning the whole icon is desired.
+   We can add a subtle cross-fade or icon morph if needed, 
+   but for now we rotate the container. */
