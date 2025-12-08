@@ -78,10 +78,10 @@ const Dashboard = () => {
         });
         const total = logs.length || 1;
         return {
-            critical: Math.round((counts.Critical / total) * 100),
-            high: Math.round((counts.High / total) * 100),
-            medium: Math.round((counts.Medium / total) * 100),
-            low: Math.round((counts.Low / total) * 100)
+            critical: counts.Critical / total,
+            high: counts.High / total,
+            medium: counts.Medium / total,
+            low: counts.Low / total
         };
     };
 
@@ -382,21 +382,45 @@ const Dashboard = () => {
                         <div className="donut-chart-container">
                             <svg className="donut-chart" viewBox="0 0 200 200">
                                 {/* Donut segments */}
-                                <circle cx="100" cy="100" r="70" fill="none" stroke="#ef4444" strokeWidth="40"
-                                    strokeDasharray={`${severityData.critical * 4.4} 440`}
-                                    transform="rotate(-90 100 100)" />
-                                <circle cx="100" cy="100" r="70" fill="none" stroke="#f97316" strokeWidth="40"
-                                    strokeDasharray={`${severityData.high * 4.4} 440`}
-                                    strokeDashoffset={`-${severityData.critical * 4.4}`}
-                                    transform="rotate(-90 100 100)" />
-                                <circle cx="100" cy="100" r="70" fill="none" stroke="#fbbf24" strokeWidth="40"
-                                    strokeDasharray={`${severityData.medium * 4.4} 440`}
-                                    strokeDashoffset={`-${(severityData.critical + severityData.high) * 4.4}`}
-                                    transform="rotate(-90 100 100)" />
-                                <circle cx="100" cy="100" r="70" fill="none" stroke="#9ca3af" strokeWidth="40"
-                                    strokeDasharray={`${severityData.low * 4.4} 440`}
-                                    strokeDashoffset={`-${(severityData.critical + severityData.high + severityData.medium) * 4.4}`}
-                                    transform="rotate(-90 100 100)" />
+                                {(() => {
+                                    const circumference = 2 * Math.PI * 70; // ~439.82
+                                    const cOffset = 0;
+                                    const hOffset = -(severityData.critical * circumference);
+                                    const mOffset = -((severityData.critical + severityData.high) * circumference);
+                                    const lOffset = -((severityData.critical + severityData.high + severityData.medium) * circumference);
+
+                                    return (
+                                        <>
+                                            {/* Background circle to prevent tiny anti-aliasing gaps */}
+                                            <circle cx="100" cy="100" r="70" fill="none" stroke="#f3f4f6" strokeWidth="40" />
+
+                                            {severityData.critical > 0 && (
+                                                <circle cx="100" cy="100" r="70" fill="none" stroke="#ef4444" strokeWidth="40"
+                                                    strokeDasharray={`${severityData.critical * circumference} ${circumference}`}
+                                                    strokeDashoffset={cOffset}
+                                                    transform="rotate(-90 100 100)" />
+                                            )}
+                                            {severityData.high > 0 && (
+                                                <circle cx="100" cy="100" r="70" fill="none" stroke="#f97316" strokeWidth="40"
+                                                    strokeDasharray={`${severityData.high * circumference} ${circumference}`}
+                                                    strokeDashoffset={hOffset}
+                                                    transform="rotate(-90 100 100)" />
+                                            )}
+                                            {severityData.medium > 0 && (
+                                                <circle cx="100" cy="100" r="70" fill="none" stroke="#fbbf24" strokeWidth="40"
+                                                    strokeDasharray={`${severityData.medium * circumference} ${circumference}`}
+                                                    strokeDashoffset={mOffset}
+                                                    transform="rotate(-90 100 100)" />
+                                            )}
+                                            {severityData.low > 0 && (
+                                                <circle cx="100" cy="100" r="70" fill="none" stroke="#9ca3af" strokeWidth="40"
+                                                    strokeDasharray={`${severityData.low * circumference} ${circumference}`}
+                                                    strokeDashoffset={lOffset}
+                                                    transform="rotate(-90 100 100)" />
+                                            )}
+                                        </>
+                                    );
+                                })()}
 
                                 {/* Center white circle */}
                                 <circle cx="100" cy="100" r="50" fill="white" />
