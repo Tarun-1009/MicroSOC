@@ -11,18 +11,62 @@ const Dashboard = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     // Mock data for charts
-    const [attackTrends] = useState([
-        { time: '03:00', value1: 100, value2: 50 },
-        { time: '06:00', value1: 80, value2: 70 },
-        { time: '09:00', value1: 60, value2: 90 },
-        { time: '12:00', value1: 120, value2: 110 },
-        { time: '15:00', value1: 90, value2: 130 },
-        { time: '18:00', value1: 110, value2: 100 },
-        { time: '21:00', value1: 200, value2: 150 },
-        { time: '00:00', value1: 70, value2: 80 },
-        { time: '03:00', value1: 130, value2: 120 },
-        { time: '06:00', value1: 150, value2: 140 },
-    ]);
+    // Real-time graph data state
+    const [graphData, setGraphData] = useState([]);
+    const [graphMaxY, setGraphMaxY] = useState(10); // Default max Y for scaling
+    const [hoveredData, setHoveredData] = useState(null); // Tooltip state
+    const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
+    // Process logs into graph data (Cumulative Active Threats)
+    const processGraphData = (currentLogs) => {
+        const now = new Date();
+        const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60000);
+        const buckets = [];
+
+        // Initialize 30 buckets (1 minute each)
+        for (let i = 0; i < 30; i++) {
+            const time = new Date(thirtyMinutesAgo.getTime() + i * 60000);
+
+            // Calculate Active Threats at this specific time point
+            // A threat is active if:
+            // 1. It was created BEFORE this time point (log.timestamp <= time)
+            // 2. It is NOT resolved OR it was resolved AFTER this time point (omitted as we only have active logs passed here)
+            // Note: fetchLogs filters out 'Resolved' status, so we assume all 'currentLogs' are currently active.
+            // However, to be historically accurate for the graph:
+            // We should count logs where log.timestamp <= bucket_time
+
+            let highCount = 0;
+            let lowCount = 0;
+
+            currentLogs.forEach(log => {
+                const logTime = new Date(log.timestamp);
+                if (logTime <= time) {
+                    if (log.severity === 'Critical' || log.severity === 'High') {
+                        highCount++;
+                    } else {
+                        lowCount++;
+                    }
+                }
+            });
+
+            buckets.push({
+                time: time,
+                label: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                high: highCount, // Accumulative
+                low: lowCount,   // Accumulative
+                total: highCount + lowCount
+            });
+        }
+
+        // Calculate Max Y for dynamic scaling
+        let maxVal = 5; // Minimum scale
+        buckets.forEach(b => {
+            maxVal = Math.max(maxVal, b.high, b.low);
+        });
+        setGraphMaxY(maxVal + 2); // Add buffer
+
+        setGraphData(buckets);
+    };
 
     // Calculate severity distribution from real logs
     const getSeverityData = () => {
@@ -50,6 +94,10 @@ const Dashboard = () => {
             const data = await res.json();
             // Filter out resolved logs - only show Open and In Progress
             const activeLogs = data.filter(log => log.status !== 'Resolved');
+
+            // Always update graph data with latest active logs
+            // We do this every fetch to keep the time window moving even if logs don't change
+            processGraphData(activeLogs);
 
             // Smart comparison: Only update if data actually changed
             setLogs(prevLogs => {
@@ -223,8 +271,43 @@ const Dashboard = () => {
             <main className="dashboard-main">
                 <div className="dashboard-grid">
                     {/* Attack Trends Chart */}
-                    <div className="dashboard-card attack-trends-card">
-                        <h3 className="card-title">Threat Activity (Last 24h)</h3>
+                    <div className="dashboard-card attack-trends-card" style={{ position: 'relative' }}>
+                        {hoveredData && (
+                            <div
+                                className="graph-tooltip"
+                                style={{
+                                    left: tooltipPos.x,
+                                    top: tooltipPos.y
+                                }}
+                            >
+                                <span className="tooltip-time">{hoveredData.label}</span>
+                                <div className="tooltip-row">
+                                    <span style={{ color: '#f97316' }}>Critical & High:</span>
+                                    <span className="tooltip-value">{hoveredData.high}</span>
+                                </div>
+                                <div className="tooltip-row">
+                                    <span style={{ color: '#60a5fa' }}>Medium & Low:</span>
+                                    <span className="tooltip-value">{hoveredData.low}</span>
+                                </div>
+                                <div className="tooltip-row" style={{ marginTop: '8px', paddingTop: '4px', borderTop: '1px solid #f3f4f6' }}>
+                                    <span>Total Active:</span>
+                                    <span className="tooltip-value">{hoveredData.total}</span>
+                                </div>
+                            </div>
+                        )}
+                        <h3 className="card-title">Threat Activity (Last 30 Minutes)</h3>
+
+                        {/* Legend for the Line Chart */}
+                        <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', marginTop: '-10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '10px', height: '10px', backgroundColor: '#f97316', borderRadius: '2px' }}></span>
+                                <span style={{ fontSize: '11px', color: '#4b5563', fontWeight: '500' }}>Critical & High</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '10px', height: '10px', backgroundColor: '#60a5fa', borderRadius: '2px' }}></span>
+                                <span style={{ fontSize: '11px', color: '#4b5563', fontWeight: '500' }}>Medium & Low</span>
+                            </div>
+                        </div>
                         <div className="chart-container">
                             <svg className="line-chart" viewBox="0 0 500 200" preserveAspectRatio="none">
                                 {/* Grid lines */}
@@ -232,34 +315,62 @@ const Dashboard = () => {
                                 <line x1="0" y1="100" x2="500" y2="100" stroke="#e5e7eb" strokeWidth="1" />
                                 <line x1="0" y1="150" x2="500" y2="150" stroke="#e5e7eb" strokeWidth="1" />
 
-                                {/* Y-axis labels */}
-                                <text x="5" y="15" fontSize="10" fill="#6b7280">200</text>
-                                <text x="5" y="65" fontSize="10" fill="#6b7280">150</text>
-                                <text x="5" y="115" fontSize="10" fill="#6b7280">100</text>
-                                <text x="5" y="165" fontSize="10" fill="#6b7280">50</text>
+                                {/* Y-axis labels - Dynamic */}
+                                <text x="5" y="15" fontSize="10" fill="#6b7280">{Math.round(graphMaxY)}</text>
+                                <text x="5" y="65" fontSize="10" fill="#6b7280">{Math.round(graphMaxY * 0.75)}</text>
+                                <text x="5" y="115" fontSize="10" fill="#6b7280">{Math.round(graphMaxY * 0.5)}</text>
+                                <text x="5" y="165" fontSize="10" fill="#6b7280">{Math.round(graphMaxY * 0.25)}</text>
                                 <text x="5" y="200" fontSize="10" fill="#6b7280">0</text>
 
-                                {/* Line 1 (Orange) */}
+                                {/* Line 1 (Low/Medium - Blue) */}
                                 <polyline
-                                    points={attackTrends.map((d, i) => `${i * 50 + 30},${200 - d.value2}`).join(' ')}
+                                    points={graphData.map((d, i) => {
+                                        const x = (i / 29) * 500;
+                                        const y = 200 - (d.low / graphMaxY) * 200;
+                                        return `${x},${y}`;
+                                    }).join(' ')}
+                                    fill="none"
+                                    stroke="#60a5fa"
+                                    strokeWidth="2"
+                                />
+
+                                {/* Line 2 (Critical/High - Orange) */}
+                                <polyline
+                                    points={graphData.map((d, i) => {
+                                        const x = (i / 29) * 500;
+                                        const y = 200 - (d.high / graphMaxY) * 200;
+                                        return `${x},${y}`;
+                                    }).join(' ')}
                                     fill="none"
                                     stroke="#f97316"
                                     strokeWidth="2"
                                 />
 
-                                {/* Line 2 (Blue) */}
-                                <polyline
-                                    points={attackTrends.map((d, i) => `${i * 50 + 30},${200 - d.value1}`).join(' ')}
-                                    fill="none"
-                                    stroke="#60a5fa"
-                                    strokeWidth="2"
-                                />
+                                {/* Interactive Overlay Rects for Tooltip */}
+                                {graphData.map((d, i) => (
+                                    <rect
+                                        key={i}
+                                        x={(i / 29) * 500 - (500 / 29 / 2)}
+                                        y="0"
+                                        width={500 / 29}
+                                        height="200"
+                                        className="chart-overlay-rect"
+                                        onMouseEnter={(e) => {
+                                            setTooltipPos({
+                                                x: `${(i / 29) * 100}%`,
+                                                y: '50%' // Center vertically or adjust as needed
+                                            });
+                                            setHoveredData(d);
+                                        }}
+                                        onMouseLeave={() => setHoveredData(null)}
+                                    />
+                                ))}
                             </svg>
 
                             {/* X-axis labels */}
-                            <div className="chart-x-axis">
-                                {['03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00', '00:00', '03:00', '06:00', '09:00', '12:00', '15:00'].map((time, i) => (
-                                    <span key={i} className="x-label">{time}</span>
+                            <div className="chart-x-axis" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                {graphData.filter((_, i) => i % 5 === 0).map((d, i) => (
+                                    <span key={i} className="x-label" style={{ fontSize: '10px', color: '#9ca3af' }}>{d.label}</span>
                                 ))}
                             </div>
                         </div>
