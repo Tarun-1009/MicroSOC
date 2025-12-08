@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
-import './Dashboard.css'; // Reuse the same styles
+import './Dashboard.css';
 
 const Ingest = () => {
     const navigate = useNavigate();
@@ -10,21 +10,24 @@ const Ingest = () => {
     const [loading, setLoading] = useState(true);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    // Fetch logs from database
     const fetchLogs = async () => {
         try {
             const res = await fetch('http://localhost:5000/api/logs');
             const data = await res.json();
-            // Filter out resolved logs - only show Open and In Progress
             const activeLogs = data.filter(log => log.status !== 'Resolved');
-            setLogs(activeLogs);
+
+            setLogs(prevLogs => {
+                if (JSON.stringify(prevLogs) !== JSON.stringify(activeLogs)) {
+                    return activeLogs;
+                }
+                return prevLogs;
+            });
         } catch (err) {
             console.error("Failed to fetch logs:", err);
         }
     };
 
     useEffect(() => {
-        // Check if user is authenticated
         if (!authService.isAuthenticated()) {
             window.location.href = '/';
             return;
@@ -34,12 +37,8 @@ const Ingest = () => {
         setUser(currentUser);
         setLoading(false);
 
-        // Initial fetch
         fetchLogs();
-
-        // Auto-refresh every 3 seconds
-        const interval = setInterval(fetchLogs, 3000);
-
+        const interval = setInterval(fetchLogs, 2000);
         return () => clearInterval(interval);
     }, []);
 
@@ -52,7 +51,6 @@ const Ingest = () => {
         return `severity-badge severity-${severity.toLowerCase()}`;
     };
 
-    // Format timestamp
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         return date.toLocaleString('en-US', {
@@ -66,7 +64,6 @@ const Ingest = () => {
         });
     };
 
-    // Update log status
     const updateLogStatus = async (logId, newStatus) => {
         try {
             const token = authService.getToken();
@@ -82,7 +79,6 @@ const Ingest = () => {
             const data = await res.json();
 
             if (data.success) {
-                // Update local state immediately
                 setLogs(logs.map(log =>
                     log.log_id === logId ? { ...log, status: newStatus } : log
                 ));
@@ -127,18 +123,12 @@ const Ingest = () => {
                 </div>
 
                 <div className="header-actions">
-                    <button
-                        className="nav-link-btn"
-                        onClick={() => navigate('/dashboard')}
-                    >
+                    <button className="nav-link-btn" onClick={() => navigate('/dashboard')}>
                         ← Back to Dashboard
                     </button>
 
                     <div className="user-menu-container">
-                        <button
-                            className="user-profile-btn"
-                            onClick={() => setShowUserMenu(!showUserMenu)}
-                        >
+                        <button className="user-profile-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
                                 <path d="M6 21C6 17.134 8.686 14 12 14C15.314 14 18 17.134 18 21" stroke="currentColor" strokeWidth="2" />
@@ -169,7 +159,6 @@ const Ingest = () => {
             </header>
 
             <main className="dashboard-main">
-                {/* All Logs Table */}
                 <div className="dashboard-card events-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                         <h3 className="card-title" style={{ margin: 0 }}>All Attack Logs ({logs.length} total)</h3>
@@ -182,7 +171,7 @@ const Ingest = () => {
                         <table className="events-table">
                             <thead>
                                 <tr>
-                                    <th>Log ID</th>
+                                    <th>#</th>
                                     <th>Timestamp</th>
                                     <th>Source IP</th>
                                     <th>Attack Type</th>
@@ -199,35 +188,37 @@ const Ingest = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    logs.map((log) => (
-                                        <tr key={log.log_id}>
-                                            <td>#{log.log_id}</td>
-                                            <td>{formatTimestamp(log.timestamp)}</td>
-                                            <td>{log.source_ip}</td>
-                                            <td>{log.attack_type}</td>
-                                            <td>
-                                                <span className={getSeverityClass(log.severity)}>
-                                                    {log.severity}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={`status-badge ${getStatusClass(log.status)}`}>
-                                                    {log.status}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <select
-                                                    className="status-select"
-                                                    value={log.status}
-                                                    onChange={(e) => updateLogStatus(log.log_id, e.target.value)}
-                                                >
-                                                    <option value="Open">Open</option>
-                                                    <option value="In Progress">In Progress</option>
-                                                    <option value="Resolved">Resolved</option>
-                                                </select>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    [...logs]
+                                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                                        .map((log, index) => (
+                                            <tr key={log.log_id}>
+                                                <td>#{logs.length - index}</td>
+                                                <td>{formatTimestamp(log.timestamp)}</td>
+                                                <td>{log.source_ip}</td>
+                                                <td>{log.attack_type}</td>
+                                                <td>
+                                                    <span className={getSeverityClass(log.severity)}>
+                                                        {log.severity}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={`status-badge ${getStatusClass(log.status)}`}>
+                                                        {log.status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <select
+                                                        className="status-select"
+                                                        value={log.status}
+                                                        onChange={(e) => updateLogStatus(log.log_id, e.target.value)}
+                                                    >
+                                                        <option value="Open">Open</option>
+                                                        <option value="In Progress">In Progress</option>
+                                                        <option value="Resolved">Resolved</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        ))
                                 )}
                             </tbody>
                         </table>
