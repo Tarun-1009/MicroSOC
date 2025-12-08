@@ -3,21 +3,21 @@
   --bg-secondary: #f5f5f5;
   --bg-tertiary: #f9fafb;
   --bg-hover: #f3f4f6;
-  
+
   /* Text Colors */
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
   --text-tertiary: #9ca3af;
-  
+
   /* Border Colors */
   --border-primary: #e5e7eb;
   --border-secondary: #f3f4f6;
-  
+
   /* Accent Colors */
   --accent-blue: #3b82f6;
   --accent-blue-hover: #2563eb;
   --accent-blue-light: #dbeafe;
-  
+
   /* Status Colors */
   --status-critical-bg: #fee2e2;
   --status-critical-text: #991b1b;
@@ -27,16 +27,16 @@
   --status-medium-text: #92400e;
   --status-low-bg: #f3f4f6;
   --status-low-text: #4b5563;
-  
+
   /* Chart Colors */
   --chart-grid: #e5e7eb;
   --chart-high: #f97316;
   --chart-low: #60a5fa;
-  
+
   /* Shadow */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  
+
   /* Tooltip */
   --tooltip-bg: rgba(255, 255, 255, 0.95);
   --tooltip-border: #e5e7eb;
@@ -47,21 +47,21 @@
   --bg-secondary: #0f0f0f;
   --bg-tertiary: #262626;
   --bg-hover: #333333;
-  
+
   /* Text Colors */
   --text-primary: #f3f4f6;
   --text-secondary: #d1d5db;
   --text-tertiary: #9ca3af;
-  
+
   /* Border Colors */
   --border-primary: #404040;
   --border-secondary: #333333;
-  
+
   /* Accent Colors */
   --accent-blue: #60a5fa;
   --accent-blue-hover: #3b82f6;
   --accent-blue-light: #1e3a8a;
-  
+
   /* Status Colors */
   --status-critical-bg: #7f1d1d;
   --status-critical-text: #fecaca;
@@ -71,16 +71,16 @@
   --status-medium-text: #fef3c7;
   --status-low-bg: #404040;
   --status-low-text: #d1d5db;
-  
+
   /* Chart Colors */
   --chart-grid: #404040;
   --chart-high: #fb923c;
   --chart-low: #60a5fa;
-  
+
   /* Shadow */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
-  
+
   /* Tooltip */
   --tooltip-bg: rgba(38, 38, 38, 0.98);
   --tooltip-border: #404040;
@@ -130,81 +130,53 @@ body {
    =========================== */
 
 .theme-toggle {
-  position: relative;
-  width: 60px;
-  height: 32px;
-  background: var(--bg-hover);
-  border: 2px solid var(--border-primary);
-  border-radius: 16px;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  transition: all 0.3s ease;
-}
-
-.theme-toggle:hover {
-  border-color: var(--accent-blue);
-  transform: scale(1.05);
-}
-
-[data-theme="dark"] .theme-toggle:hover {
-  background: #333;
-}
-
-/* The inner circle/icon container */
-/* The inner circle/icon container */
-.theme-toggle-slider {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background: var(--accent-blue);
-  border-radius: 50%;
-  transition: transform 0.3s ease;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  overflow: visible;
+}
+
+.theme-toggle:hover {
+  background-color: var(--bg-hover);
 }
 
 /* Icon Styling */
-.theme-toggle-slider svg {
-  width: 14px;
-  height: 14px;
-  color: white;
+.theme-icon {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+  stroke: currentColor;
+  fill: none;
 }
 
-[data-theme="dark"] .theme-toggle-slider svg {
-  color: var(--accent-blue);
-  /* Highlight icon in dark mode */
+/* Light Mode - Sun */
+[data-theme="light"] .theme-icon {
+  color: #f59e0b;
+  /* Amber/Orange */
+  transform: rotate(0deg);
 }
 
-/* ANIMATION STATES */
-
-/* Light mode - slider on left */
-[data-theme="light"] .theme-toggle-slider {
-  transform: translateX(2px);
+[data-theme="light"] .theme-icon:hover {
+  transform: rotate(45deg);
+  /* Slight spin on hover */
 }
 
-/* Dark mode - slider on right */
-[data-theme="dark"] .theme-toggle-slider {
+/* Dark Mode - Moon */
+[data-theme="dark"] .theme-icon {
+  color: #f3f4f6;
+  /* White/Gray */
+  fill: #f3f4f6;
+  stroke: none;
   transform: rotate(360deg);
 }
 
-/* Animation for icon rotation */
-.theme-toggle-slider svg {
-  animation: iconRotate 0.3s ease;
-}
-
-@keyframes iconRotate {
-  0% {
-    transform: rotate(0deg) scale(0.8);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.1);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
+[data-theme="dark"] .theme-icon:hover {
+  transform: rotate(345deg);
+  /* Slight spin back */
 }
