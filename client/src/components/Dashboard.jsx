@@ -10,6 +10,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
+    // Mock data for charts
     const [attackTrends] = useState([
         { time: '03:00', value1: 100, value2: 50 },
         { time: '06:00', value1: 80, value2: 70 },
@@ -23,6 +24,7 @@ const Dashboard = () => {
         { time: '06:00', value1: 150, value2: 140 },
     ]);
 
+    // Calculate severity distribution from real logs
     const getSeverityData = () => {
         const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
         logs.forEach(log => {
@@ -41,17 +43,21 @@ const Dashboard = () => {
 
     const severityData = getSeverityData();
 
+    // Fetch logs from database with smart comparison (anti-flicker)
     const fetchLogs = async () => {
         try {
             const res = await fetch('http://localhost:5000/api/logs');
             const data = await res.json();
+            // Filter out resolved logs - only show Open and In Progress
             const activeLogs = data.filter(log => log.status !== 'Resolved');
 
+            // Smart comparison: Only update if data actually changed
             setLogs(prevLogs => {
+                // Compare by stringifying - only update if different
                 if (JSON.stringify(prevLogs) !== JSON.stringify(activeLogs)) {
                     return activeLogs;
                 }
-                return prevLogs;
+                return prevLogs; // No change, keep existing state
             });
         } catch (err) {
             console.error("Failed to fetch logs:", err);
@@ -59,6 +65,7 @@ const Dashboard = () => {
     };
 
     useEffect(() => {
+        // Check if user is authenticated
         if (!authService.isAuthenticated()) {
             window.location.href = '/';
             return;
@@ -68,8 +75,12 @@ const Dashboard = () => {
         setUser(currentUser);
         setLoading(false);
 
+        // Initial fetch
         fetchLogs();
+
+        // Auto-refresh every 2 seconds
         const interval = setInterval(fetchLogs, 2000);
+
         return () => clearInterval(interval);
     }, []);
 
@@ -82,6 +93,7 @@ const Dashboard = () => {
         return `severity-badge severity-${severity.toLowerCase()}`;
     };
 
+    // Format timestamp
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         return date.toLocaleString('en-US', {
@@ -114,15 +126,41 @@ const Dashboard = () => {
                         </svg>
                     </div>
                     <span className="brand-name">MicroSOC</span>
+
+                    {/* Role Badge - Visual Indicator */}
+                    {user?.role === 'admin' ? (
+                        <div className="role-badge role-badge-admin">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="role-icon">
+                                <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="currentColor" />
+                                <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none" />
+                            </svg>
+                            <span className="role-text">ADMIN</span>
+                        </div>
+                    ) : (
+                        <div className="role-badge role-badge-analyst">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="role-icon">
+                                <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+                                <path d="M6 21C6 17.134 8.686 14 12 14C15.314 14 18 17.134 18 21" stroke="currentColor" strokeWidth="2" />
+                            </svg>
+                            <span className="role-text">ANALYST</span>
+                        </div>
+                    )}
                 </div>
 
+
                 <div className="header-actions">
-                    <button className="nav-link-btn" onClick={() => navigate('/ingest')}>
+                    <button
+                        className="nav-link-btn"
+                        onClick={() => navigate('/ingest')}
+                    >
                         📊 View All Logs
                     </button>
 
                     <div className="user-menu-container">
-                        <button className="user-profile-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
+                        <button
+                            className="user-profile-btn"
+                            onClick={() => setShowUserMenu(!showUserMenu)}
+                        >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
                                 <path d="M6 21C6 17.134 8.686 14 12 14C15.314 14 18 17.134 18 21" stroke="currentColor" strokeWidth="2" />
@@ -154,20 +192,24 @@ const Dashboard = () => {
 
             <main className="dashboard-main">
                 <div className="dashboard-grid">
+                    {/* Attack Trends Chart */}
                     <div className="dashboard-card attack-trends-card">
                         <h3 className="card-title">Threat Activity (Last 24h)</h3>
                         <div className="chart-container">
                             <svg className="line-chart" viewBox="0 0 500 200" preserveAspectRatio="none">
+                                {/* Grid lines */}
                                 <line x1="0" y1="50" x2="500" y2="50" stroke="#e5e7eb" strokeWidth="1" />
                                 <line x1="0" y1="100" x2="500" y2="100" stroke="#e5e7eb" strokeWidth="1" />
                                 <line x1="0" y1="150" x2="500" y2="150" stroke="#e5e7eb" strokeWidth="1" />
 
+                                {/* Y-axis labels */}
                                 <text x="5" y="15" fontSize="10" fill="#6b7280">200</text>
                                 <text x="5" y="65" fontSize="10" fill="#6b7280">150</text>
                                 <text x="5" y="115" fontSize="10" fill="#6b7280">100</text>
                                 <text x="5" y="165" fontSize="10" fill="#6b7280">50</text>
                                 <text x="5" y="200" fontSize="10" fill="#6b7280">0</text>
 
+                                {/* Line 1 (Orange) */}
                                 <polyline
                                     points={attackTrends.map((d, i) => `${i * 50 + 30},${200 - d.value2}`).join(' ')}
                                     fill="none"
@@ -175,6 +217,7 @@ const Dashboard = () => {
                                     strokeWidth="2"
                                 />
 
+                                {/* Line 2 (Blue) */}
                                 <polyline
                                     points={attackTrends.map((d, i) => `${i * 50 + 30},${200 - d.value1}`).join(' ')}
                                     fill="none"
@@ -183,6 +226,7 @@ const Dashboard = () => {
                                 />
                             </svg>
 
+                            {/* X-axis labels */}
                             <div className="chart-x-axis">
                                 {['03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00', '00:00', '03:00', '06:00', '09:00', '12:00', '15:00'].map((time, i) => (
                                     <span key={i} className="x-label">{time}</span>
@@ -191,10 +235,12 @@ const Dashboard = () => {
                         </div>
                     </div>
 
+                    {/* Severity Distribution Donut Chart */}
                     <div className="dashboard-card severity-card">
                         <h3 className="card-title">Threat Severity Distribution</h3>
                         <div className="donut-chart-container">
                             <svg className="donut-chart" viewBox="0 0 200 200">
+                                {/* Donut segments */}
                                 <circle cx="100" cy="100" r="70" fill="none" stroke="#ef4444" strokeWidth="40"
                                     strokeDasharray={`${severityData.critical * 4.4} 440`}
                                     transform="rotate(-90 100 100)" />
@@ -211,6 +257,7 @@ const Dashboard = () => {
                                     strokeDashoffset={`-${(severityData.critical + severityData.high + severityData.medium) * 4.4}`}
                                     transform="rotate(-90 100 100)" />
 
+                                {/* Center white circle */}
                                 <circle cx="100" cy="100" r="50" fill="white" />
                             </svg>
 
@@ -236,6 +283,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
+                {/* Live Security Event Feed */}
                 <div className="dashboard-card events-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                         <h3 className="card-title" style={{ margin: 0 }}>Recent Incidents (Top 5)</h3>
@@ -263,22 +311,19 @@ const Dashboard = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    [...logs]
-                                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                                        .slice(0, 5)
-                                        .map((log, index) => (
-                                            <tr key={log.log_id} className="fade-in">
-                                                <td>#{index + 1}</td>
-                                                <td>{formatTimestamp(log.timestamp)}</td>
-                                                <td>{log.source_ip}</td>
-                                                <td>{log.attack_type}</td>
-                                                <td>
-                                                    <span className={getSeverityClass(log.severity)}>
-                                                        {log.severity}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))
+                                    logs.slice(0, 5).map((log, index) => (
+                                        <tr key={log.log_id} className="fade-in">
+                                            <td>#{index + 1}</td>
+                                            <td>{formatTimestamp(log.timestamp)}</td>
+                                            <td>{log.source_ip}</td>
+                                            <td>{log.attack_type}</td>
+                                            <td>
+                                                <span className={getSeverityClass(log.severity)}>
+                                                    {log.severity}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
                                 )}
                             </tbody>
                         </table>
