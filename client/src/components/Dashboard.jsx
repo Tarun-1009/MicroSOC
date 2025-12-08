@@ -93,6 +93,40 @@ const Dashboard = () => {
         return `severity-badge severity-${severity.toLowerCase()}`;
     };
 
+    // Nuclear Option: Purge All Logs (Admin Only)
+    const handlePurge = async () => {
+        // Confirmation dialog
+        const confirmed = window.confirm(
+            '⚠️ WARNING: This will PERMANENTLY DELETE all attack logs and reset the database.\n\nThis action CANNOT be undone.\n\nAre you absolutely sure?'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch('http://localhost:5000/api/admin/purge', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authService.getToken()}`
+                },
+                body: JSON.stringify({ role: user.role })
+            });
+
+            if (response.ok) {
+                alert('✅ System purged successfully. All logs have been deleted.');
+                // Refresh logs immediately
+                fetchLogs();
+            } else if (response.status === 403) {
+                alert('🚫 Access Denied: Only administrators can purge the system.');
+            } else {
+                alert('❌ Failed to purge system. Please try again.');
+            }
+        } catch (error) {
+            console.error('Purge error:', error);
+            alert('❌ Network error. Could not connect to server.');
+        }
+    };
+
     // Format timestamp
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
@@ -134,7 +168,7 @@ const Dashboard = () => {
                                 <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="currentColor" />
                                 <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none" />
                             </svg>
-                            <span className="role-text">ADMIN</span>
+                            <span className="role-text">COMMANDER ACCESS</span>
                         </div>
                     ) : (
                         <div className="role-badge role-badge-analyst">
@@ -285,12 +319,44 @@ const Dashboard = () => {
 
                 {/* Live Security Event Feed */}
                 <div className="dashboard-card events-card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                        <h3 className="card-title" style={{ margin: 0 }}>Recent Incidents (Top 5)</h3>
-                        <span className="live-badge">
-                            <span className="live-dot"></span>
-                            LIVE
-                        </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <h3 className="card-title" style={{ margin: 0 }}>Recent Incidents (Top 5)</h3>
+                            <span className="live-badge">
+                                <span className="live-dot"></span>
+                                LIVE
+                            </span>
+                        </div>
+
+                        {/* Nuclear Option: Admin-Only Purge Button */}
+                        {user?.role === 'admin' && (
+                            <button
+                                onClick={handlePurge}
+                                style={{
+                                    padding: '10px 20px',
+                                    background: '#dc2626',
+                                    color: 'white',
+                                    border: '2px solid #dc2626',
+                                    borderRadius: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    transition: 'all 0.2s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = '#b91c1c';
+                                    e.target.style.borderColor = '#b91c1c';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = '#dc2626';
+                                    e.target.style.borderColor = '#dc2626';
+                                }}
+                            >
+                                ⚠️ PURGE ALL LOGS
+                            </button>
+                        )}
                     </div>
                     <div className="events-table-container">
                         <table className="events-table">

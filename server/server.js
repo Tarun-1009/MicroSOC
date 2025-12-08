@@ -311,6 +311,35 @@ app.put('/api/logs/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
+// ADMIN: PURGE ALL LOGS
+app.delete('/api/admin/purge', authenticateToken, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access Denied: Admin privileges required'
+            });
+        }
+
+        // Delete all logs
+        await pool.query("TRUNCATE TABLE attack_logs RESTART IDENTITY");
+
+        res.json({
+            success: true,
+            message: 'All logs purged successfully'
+        });
+
+    } catch (err) {
+        console.error("Purge Error:", err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during purge',
+            error: err.message
+        });
+    }
+});
+
 // START SERVER 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
