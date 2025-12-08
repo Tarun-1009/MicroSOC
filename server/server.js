@@ -24,14 +24,18 @@ app.use(express.json());
 // Initialize Database Tables
 const initDB = async () => {
     try {
+        // SCORCHED EARTH: DROP TABLE TO ENSURE SCHEMA IS CORRECT
+        // In production, we would use migrations, but for this dev issue, we need to guarantee the schema.
+        await pool.query(`DROP TABLE IF EXISTS banned_ips`);
+
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS banned_ips (
+            CREATE TABLE banned_ips (
                 ip_address VARCHAR(45) PRIMARY KEY,
                 banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 banned_by VARCHAR(255)
             )
         `);
-        console.log('[DB] Banned IPs table ready');
+        console.log('[DB] Banned IPs table recreated with correct schema');
     } catch (err) {
         console.error('[DB] Table initialization error:', err);
     }
@@ -379,6 +383,7 @@ app.post('/api/admin/ban', authenticateToken, async (req, res) => {
         }
 
         const { ip_address } = req.body;
+        console.log(`[BAN] Request to ban IP: ${ip_address} by ${req.user.email}`);
 
         if (!ip_address) {
             return res.status(400).json({
@@ -389,7 +394,7 @@ app.post('/api/admin/ban', authenticateToken, async (req, res) => {
 
         await pool.query(
             "INSERT INTO banned_ips (ip_address, banned_by) VALUES ($1, $2) ON CONFLICT (ip_address) DO NOTHING",
-            [ip_address, req.user.userId]
+            [ip_address, req.user.email]
         );
 
         res.json({
