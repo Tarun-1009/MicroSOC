@@ -22,11 +22,9 @@
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [System Architecture](#-system-architecture)
-- [API Documentation](#-api-documentation)
 - [Setup Instructions](#-setup-instructions)
 - [Screenshots](#-screenshots)
 - [Error Handling](#-error-handling--reliability)
-- [AI/ML Integration](#-aiml-integration)
 - [Team](#-team)
 - [Future Improvements](#-future-improvements)
 
@@ -48,7 +46,7 @@ The platform features:
 
 ## 🔍 Problem Statement
 
-**PS Number:** [Your PS Number Here]
+**PS Number:** 6
 
 ### Challenge
 Modern organizations face an overwhelming volume of security events daily. Security teams need:
@@ -338,20 +336,25 @@ npm install
 # Start the development server
 npm run dev
 ```
+---
 
-### 5. Start Attack Log Generator (Optional)
+## 🔑 Admin Account Creation
 
-```bash
-# In another terminal
-cd server
-node kaiju.js
+Admin accounts are created directly in the PostgreSQL database. After setting up the database, run this SQL query to create an admin user:
+
+```sql
+INSERT INTO users (name, email, password, role) 
+VALUES ('Admin User', 'admin@microsoc.com', '$2b$10$hashedPasswordHere', 'admin');
 ```
 
-### 6. Access the Application
+**Note**: The password must be bcrypt-hashed. You can hash a password using Node.js: `bcrypt.hashSync('yourPassword', 10)` or create the account via the signup form and manually update the role to 'admin' in the database.
+
+---
+
+### 5. Access the Application
 
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5000
-- **Default Admin**: Create via signup with role "admin"
 
 ### Environment Variables
 
