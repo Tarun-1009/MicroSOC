@@ -148,6 +148,21 @@ const Ingest = () => {
                         </svg>
                     </div>
                     <span className="brand-name">MicroSOC</span>
+
+                    {/* Role Badge - Visual Indicator */}
+                    {user?.role === 'admin' ? (
+                        <div className="role-badge role-badge-admin">
+                            <span className="role-text">COMMANDER ACCESS</span>
+                        </div>
+                    ) : (
+                        <div className="role-badge role-badge-analyst">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="role-icon">
+                                <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+                                <path d="M6 21C6 17.134 8.686 14 12 14C15.314 14 18 17.134 18 21" stroke="currentColor" strokeWidth="2" />
+                            </svg>
+                            <span className="role-text">ANALYST</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="header-actions">

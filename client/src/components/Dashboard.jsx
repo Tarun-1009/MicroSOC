@@ -164,10 +164,6 @@ const Dashboard = () => {
                     {/* Role Badge - Visual Indicator */}
                     {user?.role === 'admin' ? (
                         <div className="role-badge role-badge-admin">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="role-icon">
-                                <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="currentColor" />
-                                <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none" />
-                            </svg>
                             <span className="role-text">COMMANDER ACCESS</span>
                         </div>
                     ) : (
