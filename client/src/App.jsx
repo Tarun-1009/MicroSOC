@@ -3,6 +3,7 @@ import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import Ingest from './components/Ingest';
 import authService from './services/authService';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -17,35 +18,37 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Login/Signup Page */}
-        <Route path="/" element={<Auth />} />
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          {/* Login/Signup Page */}
+          <Route path="/" element={<Auth />} />
 
-        {/* Protected Dashboard Route */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected Dashboard Route */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Protected Ingest Route */}
-        <Route
-          path="/ingest"
-          element={
-            <ProtectedRoute>
-              <Ingest />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected Ingest Route */}
+          <Route
+            path="/ingest"
+            element={
+              <ProtectedRoute>
+                <Ingest />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
