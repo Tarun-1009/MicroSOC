@@ -107,7 +107,7 @@ MicroSOC addresses these challenges by providing:
 - **Interactive Charts** - Hover tooltips with detailed data
 - **Live Updates** - 2-second auto-refresh intervals
 - **Visual Feedback** - Loading states, success/error messages
-- **Accessibility** - ARIA labels, keyboard navigation
+- **Accessibility** - ARIA labels
 
 ---
 
